@@ -18,6 +18,7 @@ import numpy as np
 from skimage import io
 from scipy import fftpack
 import matplotlib.pyplot as plt
+from libs.huffman import *
 
 
 def block_partition(img, N = 8, M = None):
@@ -65,7 +66,8 @@ def jpeg_encode(img, N = 8, M = None, QTable = None):
                 [72,92,95,98,112,100,103,99],\
                 ])
     assert(len(QTable) == N)
-    assert(len(Qtable[0] == M))
+    assert(len(QTable[0] == M))
+
     # Particiono en bloques
     blocks = block_partition(img, N, M)
 
@@ -84,12 +86,16 @@ def jpeg_encode(img, N = 8, M = None, QTable = None):
         blocks[i][0][0] = blocks[i-1][0][0]
 
     # Obtención de secuencia zig-zag
+    seq = []
     # TODO
 
     # Codificación entrópica
-    # TODO
+    (binstring, hufftree) = huffman_compress(seq)
+
+    print('Compresión finalizada. Datos reducidos a', len(binstring), 'bits.')
 
 img = io.imread('lena.bmp')[:,:,0]
-img = block_partition(img, img.shape[0]//2, 100)
-plt.imshow(img[0])
-plt.show()
+jpeg_encode(img)
+# img = block_partition(img, img.shape[0]//2, 100)
+# plt.imshow(img[0])
+# plt.show()
