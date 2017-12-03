@@ -99,3 +99,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# sutff in docs, if you want it, ignore it
+docs/*
