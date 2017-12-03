@@ -6,8 +6,8 @@ así que empiezo en este 'main.py'. Después se organizará todo mejor.
 
 """
 Los pasos a seguir en la codificación son:
-* Para cada bloque de n x n (el estándar es 8x8):
-    * Aplicar FDCT a los n x n pixels
+* Para cada bloque de n x m (el estándar es 8x8):
+    * Aplicar FDCT a los n x m pixels
     * Cuantización de coeficientes DCT
     * Codificación de coeficientes DC (depende de los demás bloques)
     * Obtención de secuencia zig-zag
@@ -28,7 +28,7 @@ def block_partition(img, N = 8, M = None):
         N : natural (alto de bloque, 8 por defecto)
         M : natural (ancho de bloque, cuadrado por defecto)
 
-    * Output: array de 'Height/N x Width/N x (N x M)' (matriz de matrices)
+    * Output: array de '(Height/N * Width/N) x N x M' (array de matrices)
     """
     if M == None:
         # Por defecto es cuadrado
