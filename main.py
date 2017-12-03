@@ -64,7 +64,8 @@ def jpeg_encode(img, N = 8, M = None, QTable = None):
                 [49,64,78,87,103,121,120,101],\
                 [72,92,95,98,112,100,103,99],\
                 ])
-
+    assert(len(QTable) == N)
+    assert(len(Qtable[0] == M))
     # Particiono en bloques
     blocks = block_partition(img, N, M)
 
