@@ -36,6 +36,57 @@ def block_partition(img, N = 8, M = None):
     res = [img[x:x+M,y:y+N] for x in range(0,img.shape[0],M) for y in range(0,img.shape[1],N)]
     return res
 
+def jpeg_encode(img, N = 8, M = None, QTable = None):
+    """
+    Codifica una imagen en mapa de bits a JPEG.
+    * Input:
+        img: array bidimensional (img de un solo canal, por ahora)
+        N : natural (alto de bloque de partición, 8 por defecto)
+        M : natural (ancho de bloque de partición, cuadrado por defecto)
+        QTable: array bidimensional de NxM (tabla de cuantización de coeficientes)
+    * Output:
+        por verse...
+    """
+    # Establezo los valores por defecto
+    if M == None:
+        M = N
+    if QTable == None:
+        if not(N == 8 and M == 8):
+            print('Falta tabla de cuantización.')
+            exit(1)
+        QTable = np.array([\
+                [16,11,10,16,24,40,51,61],\
+                [12,12,14,19,26,58,60,55],\
+                [14,13,16,24,40,57,69,56],\
+                [14,17,22,29,51,87,80,62],\
+                [18,22,37,56,68,109,103,77],\
+                [24,35,55,64,81,104,113,92],\
+                [49,64,78,87,103,121,120,101],\
+                [72,92,95,98,112,100,103,99],\
+                ])
+
+    # Particiono en bloques
+    blocks = block_partition(img, N, M)
+
+    # Aplico DFT
+    for i in range(len(blocks)):
+        blocks[i] = fftpack.dct(blocks[i])
+
+    # Cuantizo con la tabla
+    for block in blocks:
+        for u in range(len(block)):
+            for v in range(len(block[0])):
+                block[u][v] = int(block[u][v] / QTable[u][v])
+
+    # Codificación de coeficientes DC
+    for i in range(1,len(blocks)):
+        blocks[i][0][0] = blocks[i-1][0][0]
+
+    # Obtención de secuencia zig-zag
+    # TODO
+
+    # Codificación entrópica
+    # TODO
 
 img = io.imread('lena.bmp')[:,:,0]
 img = block_partition(img, img.shape[0]//2, 100)
