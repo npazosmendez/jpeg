@@ -7,6 +7,7 @@ así que empiezo en este 'main.py'. Después se organizará todo mejor.
 """
 Los pasos a seguir en la codificación son:
 * Para cada bloque de n x m (el estándar es 8x8):
+    * Shiftear rango a -128 - 127
     * Aplicar FDCT a los n x m pixels
     * Cuantización de coeficientes DCT
     * Codificación de coeficientes DC (depende de los demás bloques)
@@ -16,7 +17,7 @@ Los pasos a seguir en la codificación son:
 
 import numpy as np
 from skimage import io
-from scipy import fftpack
+from scipy.fftpack import dct, idct
 import matplotlib.pyplot as plt
 from libs.huffman import *
 
@@ -34,8 +35,14 @@ def block_partition(img, N = 8, M = None):
     if M == None:
         # Por defecto es cuadrado
         M = N
-    res = [img[x:x+M,y:y+N] for x in range(0,img.shape[0],M) for y in range(0,img.shape[1],N)]
+    res = np.array([img[x:x+M,y:y+N] for x in range(0,img.shape[0]-M+1,M) for y in range(0,img.shape[1]-N+1,N)])
     return res
+
+def dct2(block):
+    return dct(dct(block.T, norm='ortho').T, norm='ortho')
+
+def idct2(block):
+    return idct(idct(block.T, norm='ortho').T, norm='ortho')
 
 def jpeg_encode(img, N = 8, M = None, QTable = None):
     """
@@ -68,34 +75,49 @@ def jpeg_encode(img, N = 8, M = None, QTable = None):
     assert(len(QTable) == N)
     assert(len(QTable[0] == M))
 
+
+    # Shifteo rango
+    print('Shifteando rangos...')
+    unos = np.ones(img.shape,dtype=np.int8)
+    img = img - unos*128
+
     # Particiono en bloques
+    print('Particionando en bloques',N,'x',M,'...')
     blocks = block_partition(img, N, M)
 
-    # Aplico DFT
+    # Aplico DCT
+    print('Calculando DCT...')
+    blocks_dct = np.zeros(blocks.shape)
     for i in range(len(blocks)):
-        blocks[i] = fftpack.dct(blocks[i])
+        blocks_dct[i] = dct2(blocks[i])
 
     # Cuantizo con la tabla
-    for block in blocks:
-        for u in range(len(block)):
-            for v in range(len(block[0])):
-                block[u][v] = int(block[u][v] / QTable[u][v])
+    print('Cuantizando coeficientes...')
+    blocks_dctq = np.empty(blocks_dct.shape, dtype = np.int8)
+    for i in range(len(blocks_dct)):
+        blocks_dctq[i] = np.divide(blocks_dct[i], QTable)
+
 
     # Codificación de coeficientes DC
+    print('Codificando coeficientes DC...')
     for i in range(1,len(blocks)):
-        blocks[i][0][0] = blocks[i-1][0][0]
+        blocks_dctq[i][0][0] = blocks_dctq[i-1][0][0]
 
     # Obtención de secuencia zig-zag
-    seq = []
-    # TODO
+    print('Obteniendo secuencia completa...')
+    # TODO: por ahora está secuencial
+    seq = np.concatenate(np.concatenate(blocks_dctq))
 
     # Codificación entrópica
+    print('Comprimiendo...')
     (binstring, hufftree) = huffman_compress(seq)
 
-    print('Compresión finalizada. Datos reducidos a', len(binstring), 'bits.')
+    print('Compresión finalizada.')
+    print('Tamaño en Kbytes original: \t', img.shape[0]*img.shape[1]*8 / 8 / 1000)
+    print('Tamaño en Kbytes comprimido: \t', len(binstring) / 8 / 1000)
 
-img = io.imread('lena.bmp')[:,:,0]
-jpeg_encode(img)
+img = io.imread('sun.bmp')[:,:,0]
+jpeg_encode(img,N=8)
 # img = block_partition(img, img.shape[0]//2, 100)
 # plt.imshow(img[0])
 # plt.show()

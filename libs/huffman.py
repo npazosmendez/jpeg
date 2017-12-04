@@ -336,9 +336,7 @@ def huffman_compress(slist):
         * slist: lista de simbolos
     Output: tupla (string de 0/1, árbol de Huffman)
     """
-    # slist[:] = map(str, slist) # Casteo a lista de string
     probs = list(Counter(slist).items()) # Cuento los simbolos
-
     symbols = makenodes(probs) # Creo los nodos
     root = iterate(symbols) # Creo el árbol de Huffman
     zipped = encode(slist, symbols) # Comprimo con Huffman
