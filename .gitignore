@@ -103,3 +103,4 @@ ENV/
 # sutff in docs, if you want it, ignore it
 docs/*
 .DS_Store
+*.swp
