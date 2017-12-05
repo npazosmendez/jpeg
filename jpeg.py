@@ -80,6 +80,15 @@ def jpeg_encode(img, N = 8, M = None, QTable = None):
     assert(len(QTable[0]) == M)
 
 
+    # 1-padding para que altura % N = 0 y ancho % M = 0
+    if not(img.shape[0] % N == 0):
+        unos = np.ones((N-img.shape[0]%N,img.shape[1]),dtype=np.int8)
+        img = np.concatenate((img, unos), axis=0)
+
+    if not(img.shape[1] % M == 0):
+        unos = np.ones((img.shape[0],M-img.shape[1]%M),dtype=np.int8)
+        img = np.concatenate((img, unos), axis=1)
+
     # Shifteo rango
     print('Shifteando rangos...')
     unos = np.ones(img.shape,dtype=np.int8)
@@ -87,9 +96,9 @@ def jpeg_encode(img, N = 8, M = None, QTable = None):
 
     # Particiono en bloques
     print('Particionando en bloques',N,'x',M,'...')
-    blocks = np.array_split(img,len(img)//N,axis=0) # horizontal
+    blocks = np.array_split(img,img.shape[0]//N,axis=0) # horizontal
     for i in range(len(blocks)):
-        blocks[i] = np.array_split(blocks[i],len(img)//M,axis=1) # vertical
+        blocks[i] = np.array_split(blocks[i],img.shape[1]//M,axis=1) # vertical
 
     # Aplico DCT
     print('Calculando DCT...')
@@ -178,6 +187,14 @@ def jpeg_decode(binstring, hufftree, alto, ancho, N = 8, M = None, QTable = None
     assert(len(QTable) == N)
     assert(len(QTable[0]) == M)
 
+    # Tomo alturas auxiliares, por si hay padding
+    alto_bu = alto
+    ancho_bu = ancho
+    if not(alto % N == 0):
+        alto += N-alto%N
+    if not(ancho % M == 0):
+        ancho += M-ancho%M
+
     # Decodificación entrópica
     print('Descomprimiendo...')
     seq_comp = huffman_uncompress(binstring, hufftree)
@@ -237,6 +254,9 @@ def jpeg_decode(binstring, hufftree, alto, ancho, N = 8, M = None, QTable = None
     print('Shifteando rangos...')
     unos = np.ones(img.shape,dtype=np.int8)
     img = img + unos*128
+
+    # Si hubo padding, se lo quito
+    img = img[:alto_bu,:ancho_bu]
 
     print('Decodificación finalizada.')
     return img
