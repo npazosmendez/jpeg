@@ -115,8 +115,7 @@ def jpeg_encode(img, NM = (8,8), QTable = np.array([\
 
     # Obtención de secuencia zig-zag
     print('Obteniendo secuencia completa...')
-    # TODO: por ahora está secuencial
-    seq = np.concatenate(np.concatenate(blocks_dctq))
+    seq = zig_zag_packing(blocks_dctq)
 
     # Compresión de secuencia
     # cada simbolo K se reduce a una tupla (C,k), donde C indica la cantidad
@@ -233,3 +232,43 @@ def jpeg_decode(jpeg):
 
     print('Decodificación finalizada.')
     return img
+
+def zig_zag_packing(blocks):
+    # IN: Array de bloques de 8x8
+    # OUT: Array con los bloques aplanados, pero en cada lugar 
+    # va cada bloque desplegado haciendo zig-zag
+    out_array = []
+    for k in range(len(blocks)):
+        # aplano un bloque haciendo zig-zag
+        block = []*64
+        i = 0; j = 0; going_up = True; linear_index = 0
+        while True:
+            block[linear_index] = blocks[k][i][j]
+            linear_index += 1
+            if (i,j) == (63,63): break
+            if going_up:
+                if j == 0:
+                    # derecha
+                    i += 1
+                    going_up = False
+                    continue
+                elif i == 63:
+                    # abajo
+                    j += 1
+                    going_up = False
+                else:
+                    # voy para arriba
+                    i+=1
+                    j+=1
+            else: # Yendo para abajo
+                if i ==  0:
+                    j+=1
+                    going_up = True
+                elif j == 63:
+                    i+=1
+                    going_up = True
+                else:
+                    i-=1
+                    j-=1
+        out_array = out_array + block
+   return np.array(out_array) 
