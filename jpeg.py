@@ -171,7 +171,7 @@ def jpeg_encode(img, NM = (8,8), QTable = np.array([\
 
     # Obtención de secuencia zig-zag
     print('Obteniendo secuencia completa...')
-    seq = zig_zag_packing(blocks_dctq)
+    seq = zig_zag_packing(img_blocks_qdct)
     # seq = np.concatenate(np.concatenate(img_blocks_qdct))
 
     # Compresión de secuencia
