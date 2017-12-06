@@ -110,10 +110,10 @@ def block_qidct(img_blocks_dctq, QTable):
 
     # Aplico DCT
     print('Calculando IDCT...')
-    img_blocks = np.zeros(img_blocks_dct.shape)
+    img_blocks = np.zeros(img_blocks_dct.shape,dtype=np.int8)
     for i in range(len(img_blocks)):
         for j in range(len(img_blocks[0])):
-            img_blocks[i][j] = idct2(img_blocks_dct[i][j])
+            img_blocks[i][j] = np.clip(idct2(img_blocks_dct[i][j]),-128,127)
 
     # Uno los bloques
     img_blocks = np.concatenate(img_blocks.tolist(),axis=1)
