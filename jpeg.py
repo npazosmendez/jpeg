@@ -171,8 +171,8 @@ def jpeg_encode(img, NM = (8,8), QTable = np.array([\
 
     # Obtención de secuencia zig-zag
     print('Obteniendo secuencia completa...')
-    # TODO: por ahora está secuencial
-    seq = np.concatenate(np.concatenate(img_blocks_qdct))
+    seq = zig_zag_packing(blocks_dctq)
+    # seq = np.concatenate(np.concatenate(img_blocks_qdct))
 
     # Compresión de secuencia
     # cada simbolo K se reduce a una tupla (C,k), donde C indica la cantidad
@@ -267,3 +267,47 @@ def jpeg_decode(jpeg):
 
     print('Decodificación finalizada.')
     return img
+
+def zig_zag_packing(blocks):
+    # IN: Array de bloques de 8x8
+    # OUT: Array con los bloques aplanados, pero en cada lugar
+    # va cada bloque desplegado haciendo zig-zag
+    out_array = np.zeros((0,1), np.int)
+    for k in range(len(blocks)):
+        print("zig_zag en bloque ",k," de ",len(blocks))
+        # aplano un bloque haciendo zig-zag
+        block = np.zeros((64,1),np.int)
+        i = 0; j = 0; going_up = True; linear_index = 0
+        while True:
+            if not (0 <= i and i < 8 and 0 <= j and j < 8):
+                print("error con indices i:",i," j:",j)
+                exit(1)
+            # print("(",i,", ",j,")")
+            block[linear_index] = blocks[k,i,j]
+            linear_index += 1
+            if (i,j) == (7,7): break
+            if going_up:
+                if j == 0:
+                    # derecha
+                    i += 1
+                    going_up = False
+                elif i == 7:
+                    # abajo
+                    j += 1
+                    going_up = False
+                else:
+                    # voy para arriba
+                    i+=1
+                    j-=1
+            else: # Yendo para abajo
+                if j == 7:
+                    i+=1
+                    going_up = True
+                elif i ==  0:
+                    j+=1
+                    going_up = True
+                else:
+                    i-=1
+                    j+=1
+        out_array = np.append(out_array, block)
+    return out_array
