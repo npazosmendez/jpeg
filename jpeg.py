@@ -171,8 +171,7 @@ def jpeg_encode(img, NM = (8,8), QTable = np.array([\
 
     # Obtención de secuencia zig-zag
     print('Obteniendo secuencia completa...')
-    seq = zig_zag_packing(img_blocks_qdct)
-    # seq = np.concatenate(np.concatenate(img_blocks_qdct))
+    seq = fast_ZZPACK(img_blocks_qdct)
 
     # Compresión de secuencia
     # cada simbolo K se reduce a una tupla (C,k), donde C indica la cantidad
@@ -246,12 +245,7 @@ def jpeg_decode(jpeg):
 
     # Obtención de secuencia zig-zag
     print('Desarmando secuencia...')
-    # TODO: por ahora está secuencial
-    seq = np.array(seq)
-    img_blocks_dctq = np.array_split(seq,len(seq)//(N*M))
-    for i in range(len(img_blocks_dctq)):
-        img_blocks_dctq[i] = np.array_split(img_blocks_dctq[i],len(img_blocks_dctq[i])//N)
-    img_blocks_dctq = np.array(img_blocks_dctq)
+    img_blocks_dctq = zig_zag_unpacking(seq,N,M)
 
     # Decodificación de coeficientes DC
     print('Decodificando coeficientes DC...')
@@ -268,14 +262,17 @@ def jpeg_decode(jpeg):
     print('Decodificación finalizada.')
     return img
 
- # np.concatenate([np.diagonal(a[::-1,:], k)[::(2*(k % 2)-1)] for k in range(1-a.shape[0], a.shape[0])])
 
 def fast_ZZPACK(blocks):
-    OUT = np.zeros((0,1), np.int)
-    for j in range(len(blocks)):
-        a = blocks[j]
-        OUT = np.append(OUT, np.concatenate([np.diagonal(\
-                a[::-1,:], k)[::(2*(k % 2)-1)] for k in range(1-a.shape[0], a.shape[0])]))
+    """
+    Toma un arreglo de matrices y devuelve un arreglo de números que surge de
+    recorrer en forma de zig-zag las matrices del arreglo en orden.
+
+    Input:
+        * blocks: arreglo de matrices, todas de igual tamaño
+    Output: arreglo de enteros
+    """
+    OUT = np.concatenate([np.diagonal(block[::-1,:], k)[::(2*(k % 2)-1)] for block in blocks for k in range(1-block.shape[0], block.shape[0])])
     return OUT
 
 def zig_zag_packing(blocks):
@@ -322,28 +319,36 @@ def zig_zag_packing(blocks):
         out_array = np.append(out_array, block)
     return out_array
 
-def zig_zag_unpacking(zig_zagged_array):
+def zig_zag_unpacking(zig_zagged_array,N,M):
+    """
+    Toma una secuencia 'zig_zagged_array' y devuelve una lista de matrices de NxM, que se
+    arman de interpretar subsecuencias de NxM elementos de 'zig_zagged_array' como
+    recorridos zig-zag de varias matrices.
+    Input:
+    * zig_zagged_array: arreglo de enteros
+    * N,M : enteros
+    Precondición: largo(zig_zagged_array) es múltiplo de N*M
+    Output: arreglo de matrices de NxM
+    """
     # IN: zig-zagged array, post huffman decompression
     # OUT: 8x8 matrix, in previous-to-huffman order
 
-    # NOTE: This function is very hardcoded, doesn't matter, we want speed dog
+    # Variable a devolver
+    block_array = np.empty((len(zig_zagged_array)//(N*M),N,M),dtype=np.int8)
 
-    ZIG_MAT =   [[0,1,8,16,9,2,3,10],\
-                [17,24,32,25,18,11,4,5],\
-                [12,19,26,33,40,48,41,34],\
-                [27,20,13,6,7,14,21,28],\
-                [35,42,49,56,57,50,43,36],\
-                [29,22,15,23,30,37,44,51],\
-                [58,59,52,45,38,31,39,46],\
-                [53,60,61,54,47,55,62,63]]
-    ZIG_MAT_RAV = np.ravel(ZIG_MAT)
+    # Creo el índice para reordenar los elementos
+    MAT = np.array(np.split(np.arange(0,N*M),M)) # matriz ordenada
+    ZIG_MAT_RAV = np.concatenate([np.diagonal(MAT[::-1,:], k)[::(2*(k % 2)-1)] for k in range(1-MAT.shape[0], MAT.shape[0])]) # matriz recorrida en diagonal aplanada
 
-    block_array = []
-    for k in range(len(zig_zagged_array//64)): # qty of blocks in array
-        block = np.zeros((8,8), np.int)
-        for i in range(64):
-            MAT_i = ZIG_MAT_RAV[i]//8
-            MAT_j = ZIG_MAT_RAV[i]%8
-            block[MAT_i][MAT_j] = zig_zagged_array[k*64+i]
-        block_array.append(block)
+    # Reordeno de a NxM elementos según el índice 'ZIG_MAT_RAV' y los guardo en 'block'.
+    block = np.zeros(N*M,dtype=np.int)
+    for k in range(len(zig_zagged_array)//(N*M)): # qty of blocks in array
+        for i in range(N*M):
+            block[ZIG_MAT_RAV[i]] = zig_zagged_array[k*N*M+i]
+        # Luego pongo 'block' en el resultado
+        block_array[k] = np.array(np.split(block,M))
+
+    # Convierto salida en np.array
+    block_array = np.array(block_array)
+
     return block_array
