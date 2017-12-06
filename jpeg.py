@@ -47,6 +47,85 @@ def dct2(block):
 def idct2(block):
     return idct(idct(block.T, norm='ortho').T, norm='ortho')
 
+
+def block_qdct(img, NM, QTable):
+    """
+    ('block_qdct' = block quantized discrete cosine transformation)
+    Aplica la transformada del coseno discreta a la imagen a cada cuadrado
+    de NxM de la imagen de entrada, quantizando los valores según QTable.
+
+    * Output: matriz de matrices de NxM. La unión de todas las matrices de NxM
+    tiene el mismo tamaño que img.
+    """
+
+    N = NM[0]
+    M = NM[1]
+
+    # Shifteo rango
+    print('Shifteando rangos...')
+    unos = np.ones(img.shape,dtype=np.int8)
+    img = img - unos*128
+
+    # Particiono en bloques
+    print('Particionando en bloques',N,'x',M,'...')
+    img_blocks = np.array_split(img,img.shape[0]//N,axis=0) # horizontal
+    for i in range(len(img_blocks)):
+        img_blocks[i] = np.array_split(img_blocks[i],img.shape[1]//M,axis=1) # vertical
+
+    # Aplico DCT
+    print('Calculando DCT...')
+    img_blocks_qdct = np.copy(img_blocks)
+    for i in range(len(img_blocks)):
+        for j in range(len(img_blocks[0])):
+            img_blocks_qdct[i][j] = dct2(img_blocks[i][j])
+
+    # Cuantizo con la tabla
+    print('Cuantizando coeficientes...')
+    img_blocks_dctq = np.empty(img_blocks_qdct.shape, dtype = np.int8)
+    for i in range(len(img_blocks)):
+        for j in range(len(img_blocks[0])):
+            img_blocks_dctq[i][j] = np.divide(img_blocks_qdct[i][j], QTable)
+    img_blocks_dctq = np.array(img_blocks_dctq)
+
+    return img_blocks_dctq
+
+def block_qidct(img_blocks_dctq, QTable):
+    """
+    ('block_qidct' = block quantized inverse discrete cosine transformation)
+    Aplica la anti transformada del coseno discreta a cada matriz de la
+    matriz de matrices "img_blocks_dctq" y rearma la imagen original.
+
+    * Output: imagen original, formada por las inversas del coseno de las
+    matrices del input.
+    """
+
+    # Descuantizo con la tabla
+    img_blocks_dct = np.zeros(img_blocks_dctq.shape, dtype = np.float)
+    print('Descuantizando coeficientes...')
+    k = 0
+    for i in range(len(img_blocks_dct)):
+        for j in range(len(img_blocks_dct[0])):
+            img_blocks_dct[i][j] = np.multiply(img_blocks_dctq[i][j], QTable)
+            k +=1
+
+    # Aplico DCT
+    print('Calculando IDCT...')
+    img_blocks = np.zeros(img_blocks_dct.shape)
+    for i in range(len(img_blocks)):
+        for j in range(len(img_blocks[0])):
+            img_blocks[i][j] = idct2(img_blocks_dct[i][j])
+
+    # Uno los bloques
+    img_blocks = np.concatenate(img_blocks.tolist(),axis=1)
+    img = np.concatenate(img_blocks,axis=1)
+
+    # Shifteo rango
+    print('Shifteando rangos...')
+    unos = np.ones(img.shape,dtype=np.int8)
+    img = img + unos*128
+
+    return img
+
 def jpeg_encode(img, NM = (8,8), QTable = np.array([\
         [16,11,10,16,24,40,51,61],\
         [12,12,14,19,26,58,60,55],\
@@ -70,53 +149,30 @@ def jpeg_encode(img, NM = (8,8), QTable = np.array([\
 
     N = NM[0]
     M = NM[1]
-    # 1-padding para que altura % N = 0 y ancho % M = 0
     alto = img.shape[0]
     ancho = img.shape[1]
+
+    # 1-padding para que altura%N=0 y ancho%M=0
     if not(img.shape[0] % N == 0):
         unos = np.ones((N-img.shape[0]%N,img.shape[1]),dtype=np.int8)
         img = np.concatenate((img, unos), axis=0)
-
     if not(img.shape[1] % M == 0):
         unos = np.ones((img.shape[0],M-img.shape[1]%M),dtype=np.int8)
         img = np.concatenate((img, unos), axis=1)
 
-    # Shifteo rango
-    print('Shifteando rangos...')
-    unos = np.ones(img.shape,dtype=np.int8)
-    img = img - unos*128
-
-    # Particiono en bloques
-    print('Particionando en bloques',N,'x',M,'...')
-    blocks = np.array_split(img,img.shape[0]//N,axis=0) # horizontal
-    for i in range(len(blocks)):
-        blocks[i] = np.array_split(blocks[i],img.shape[1]//M,axis=1) # vertical
-
-    # Aplico DCT
-    print('Calculando DCT...')
-    blocks_dct = np.copy(blocks)
-    for i in range(len(blocks)):
-        for j in range(len(blocks[0])):
-            blocks_dct[i][j] = dct2(blocks[i][j])
-
-    # Cuantizo con la tabla
-    print('Cuantizando coeficientes...')
-    blocks_dctq = np.empty(blocks_dct.shape, dtype = np.int8)
-    for i in range(len(blocks)):
-        for j in range(len(blocks[0])):
-            blocks_dctq[i][j] = np.divide(blocks_dct[i][j], QTable)
-
+    # Cambio de espacio por bloque, cuantizado
+    img_blocks_qdct = block_qdct(img,NM,QTable)
 
     # Codificación de coeficientes DC
-    blocks_dctq = np.concatenate(blocks_dctq)
+    img_blocks_qdct = np.concatenate(img_blocks_qdct)
     print('Codificando coeficientes DC...')
-    for i in range(len(blocks_dctq)-1,0,-1):
-        blocks_dctq[i][0][0] = blocks_dctq[i][0][0] - blocks_dctq[i-1][0][0]
+    for i in range(len(img_blocks_qdct)-1,0,-1):
+        img_blocks_qdct[i][0][0] = img_blocks_qdct[i][0][0] - img_blocks_qdct[i-1][0][0]
 
     # Obtención de secuencia zig-zag
     print('Obteniendo secuencia completa...')
     # TODO: por ahora está secuencial
-    seq = np.concatenate(np.concatenate(blocks_dctq))
+    seq = np.concatenate(np.concatenate(img_blocks_qdct))
 
     # Compresión de secuencia
     # cada simbolo K se reduce a una tupla (C,k), donde C indica la cantidad
@@ -192,41 +248,19 @@ def jpeg_decode(jpeg):
     print('Desarmando secuencia...')
     # TODO: por ahora está secuencial
     seq = np.array(seq)
-    blocks_dctq = np.array_split(seq,len(seq)//(N*M))
-    for i in range(len(blocks_dctq)):
-        blocks_dctq[i] = np.array_split(blocks_dctq[i],len(blocks_dctq[i])//N)
-    blocks_dctq = np.array(blocks_dctq)
+    img_blocks_dctq = np.array_split(seq,len(seq)//(N*M))
+    for i in range(len(img_blocks_dctq)):
+        img_blocks_dctq[i] = np.array_split(img_blocks_dctq[i],len(img_blocks_dctq[i])//N)
+    img_blocks_dctq = np.array(img_blocks_dctq)
 
     # Decodificación de coeficientes DC
     print('Decodificando coeficientes DC...')
-    for i in range(1,len(blocks_dctq)):
-        blocks_dctq[i][0][0] = blocks_dctq[i-1][0][0] + blocks_dctq[i][0][0]
+    for i in range(1,len(img_blocks_dctq)):
+        img_blocks_dctq[i][0][0] = img_blocks_dctq[i-1][0][0] + img_blocks_dctq[i][0][0]
 
-    # Cuantizo con la tabla
-    blocks_dct = np.zeros((alto//N,ancho//M,N,M), dtype = np.float)
-    print('Descuantizando coeficientes...')
-    k = 0
-    for i in range(len(blocks_dct)):
-        for j in range(len(blocks_dct[0])):
-            blocks_dct[i][j] = np.multiply(blocks_dctq[k], QTable)
-            k +=1
-
-    # Aplico DCT
-    print('Calculando IDCT...')
-    blocks = np.zeros(blocks_dct.shape)
-    for i in range(len(blocks)):
-        for j in range(len(blocks[0])):
-            blocks[i][j] = idct2(blocks_dct[i][j])
-
-    # Uno los bloques
-    print('Uniendo los bloques de ',N,'x',M,'...')
-    blocks = np.concatenate(blocks.tolist(),axis=1)
-    img = np.concatenate(blocks,axis=1)
-
-    # Shifteo rango
-    print('Shifteando rangos...')
-    unos = np.ones(img.shape,dtype=np.int8)
-    img = img + unos*128
+    # Armo la matrz de matrices y vuelvo a al imagen original
+    img_blocks_dctq = np.array(np.array_split(img_blocks_dctq,alto//N))
+    img = block_qidct(img_blocks_dctq,QTable)
 
     # Si hubo padding, se lo quito
     img = img[0:jpeg.height,0:jpeg.width]
