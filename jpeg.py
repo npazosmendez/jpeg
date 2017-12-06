@@ -171,7 +171,12 @@ def jpeg_encode(img, NM = (8,8), QTable = np.array([\
 
     # Obtención de secuencia zig-zag
     print('Obteniendo secuencia completa...')
-    seq = fast_ZZPACK(img_blocks_qdct)
+    if True:
+        # zig-zag
+        seq = fast_ZZPACK(img_blocks_qdct)
+    else:
+        # secuencial
+        seq = np.concatenate(np.concatenate(img_blocks_qdct))
 
     # Compresión de secuencia
     # cada simbolo K se reduce a una tupla (C,k), donde C indica la cantidad
@@ -245,7 +250,17 @@ def jpeg_decode(jpeg):
 
     # Obtención de matrices a partir de secuencias zig-zag
     print('Desarmando secuencia...')
-    img_blocks_dctq = zig_zag_unpacking(seq,N,M)
+    if True:
+        # zig-zag
+        img_blocks_dctq = zig_zag_unpacking(seq,N,M)
+    else:
+        # secuencial
+        seq = np.array(seq)
+        img_blocks_dctq = np.array_split(seq,len(seq)//(N*M))
+        for i in range(len(img_blocks_dctq)):
+            img_blocks_dctq[i] = np.array_split(img_blocks_dctq[i],len(img_blocks_dctq[i])//N)
+        img_blocks_dctq = np.array(img_blocks_dctq)
+
 
     # Decodificación de coeficientes DC
     print('Decodificando coeficientes DC...')
