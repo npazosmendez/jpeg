@@ -268,6 +268,16 @@ def jpeg_decode(jpeg):
     print('Decodificación finalizada.')
     return img
 
+ # np.concatenate([np.diagonal(a[::-1,:], k)[::(2*(k % 2)-1)] for k in range(1-a.shape[0], a.shape[0])])
+
+def fast_ZZPACK(blocks):
+    OUT = np.zeros((0,1), np.int)
+    for j in range(len(blocks)):
+        a = blocks[j]
+        OUT = np.append(OUT, np.concatenate([np.diagonal(\
+                a[::-1,:], k)[::(2*(k % 2)-1)] for k in range(1-a.shape[0], a.shape[0])]))
+    return OUT
+
 def zig_zag_packing(blocks):
     # IN: Array de bloques de 8x8
     # OUT: Array con los bloques aplanados, pero en cada lugar
@@ -311,3 +321,29 @@ def zig_zag_packing(blocks):
                     j+=1
         out_array = np.append(out_array, block)
     return out_array
+
+def zig_zag_unpacking(zig_zagged_array):
+    # IN: zig-zagged array, post huffman decompression
+    # OUT: 8x8 matrix, in previous-to-huffman order
+
+    # NOTE: This function is very hardcoded, doesn't matter, we want speed dog
+
+    ZIG_MAT =   [[0,1,8,16,9,2,3,10],\
+                [17,24,32,25,18,11,4,5],\
+                [12,19,26,33,40,48,41,34],\
+                [27,20,13,6,7,14,21,28],\
+                [35,42,49,56,57,50,43,36],\
+                [29,22,15,23,30,37,44,51],\
+                [58,59,52,45,38,31,39,46],\
+                [53,60,61,54,47,55,62,63]]
+    ZIG_MAT_RAV = np.ravel(ZIG_MAT)
+
+    block_array = []
+    for k in range(len(zig_zagged_array//64)): # qty of blocks in array
+        block = np.zeros((8,8), np.int)
+        for i in range(64):
+            MAT_i = ZIG_MAT_RAV[i]//8
+            MAT_j = ZIG_MAT_RAV[i]%8
+            block[MAT_i][MAT_j] = zig_zagged_array[k*64+i]
+        block_array.append(block)
+    return block_array
