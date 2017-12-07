@@ -2,14 +2,11 @@
 from jpeg import *
 from skimage import io
 import matplotlib.pyplot as plt
+import seaborn as sns
+from util import *
 
 img = io.imread('bmp/lena.bmp')
 print("Dimensiones originales:",img.shape)
-
-plt.figure()
-plt.imshow(img,cmap='gray')
-plt.title('Sin comprimir\n size: '+str(len(img)*len(img[0])/1000)+' KB')
-
 
 # QTable = [[15,50],[70,200]]
 QTable = np.array([\
@@ -30,6 +27,10 @@ img2 = jpeg_decode(jpeg)
 print("Dimensiones finales:",img2.shape)
 
 plt.figure()
+plt.imshow(img,cmap='gray')
+plt.title('Sin comprimir\n size: '+str(len(img)*len(img[0])*3/1000)+' KB')
+
+plt.figure()
 plt.imshow(img2,cmap='gray')
 plt.title('Comprimida con JPEG\n size: '+str(jpeg.size())+' KB')
 
@@ -38,6 +39,4 @@ plt.imshow(img2-img)
 plt.title('Diferencia')
 plt.colorbar()
 
-
-
-# plt.show()
+plt.show()

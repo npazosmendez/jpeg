@@ -13,8 +13,10 @@ Los pasos a seguir en la codificación son:
 import numpy as np
 from scipy.fftpack import dct, idct
 import huffman
-from skimage import color
+from libs.color import *
 from collections import Counter
+import matplotlib.pyplot as plt
+from util import *
 
 class jpeg:
     def __init__(self, YCbCr_binstring, YCbCr_huffdic, height, width, NM = (8,8), \
@@ -43,7 +45,7 @@ class jpeg:
         self.QTable = QTable
 
     def size(self):
-        return (len(self.Ybinstring) + len(self.Cbbinstring) + len(self.Crbinstring))* 8 /1000
+        return (len(self.Ybinstring) + len(self.Cbbinstring) + len(self.Crbinstring))/ 8 /1000
 
 
 def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
@@ -61,14 +63,12 @@ def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
     factor = (100 - Q + 1)/2
 
     # Convierto a espacio YCbCr
-    img_YCbCr = color.convert_colorspace(img, 'RGB', 'YCbCr')
+    img_YCbCr = RGB2YCbCr(img)
     img_Y = img_YCbCr[:,:,0]
     img_Cb = img_YCbCr[:,:,1]
     img_Cr = img_YCbCr[:,:,2]
 
-    print(img_Y.shape)
-    print(img_Cb.shape)
-    print(img_Cr.shape)
+
 
     # Codifico los tres canales como JPEG en tira de bits
     (Ybinstring, Yhuffdic) = jpeg_mono_encode(img_Y, NM, QTable*factor)
@@ -87,32 +87,21 @@ def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
 
 def jpeg_decode(jpeg):
 
-
-
     img_Y = jpeg_mono_decode(jpeg.Ybinstring, jpeg.Yhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
     img_Cb = jpeg_mono_decode(jpeg.Cbbinstring, jpeg.Cbhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
     img_Cr = jpeg_mono_decode(jpeg.Crbinstring, jpeg.Crhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
+
 
     img_YCbCr = np.empty((img_Y.shape[0],img_Y.shape[1],3), dtype= np.uint8)
     img_YCbCr[:,:,0] = img_Y
     img_YCbCr[:,:,1] = img_Cb
     img_YCbCr[:,:,2] = img_Cr
 
-    print(img_YCbCr.shape)
-    img_RGB = color.convert_colorspace(img_YCbCr, 'YCbCr', 'RGB')
-    print(img_RGB.shape)
-    print(img_RGB)
-    exit()
-    import matplotlib.pyplot as plt
-    plt.subplot(3,1,1)
-    plt.imshow(img_YCbCr[:,:,0])
-    plt.subplot(3,1,2)
-    plt.imshow(img_YCbCr[:,:,1])
-    plt.subplot(3,1,3)
-    plt.imshow(img_YCbCr[:,:,2])
-    plt.show()
-    plt.imshow(img_RGB)
-    plt.show()
+
+
+    img_RGB = YCbCr2RGB(img_YCbCr)
+
+
     return img_RGB
 
 def jpeg_mono_encode(img, NM, QTable):
