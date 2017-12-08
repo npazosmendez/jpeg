@@ -262,7 +262,15 @@ def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
     # Decodificación de coeficientes DC
     dprint('Decodificando coeficientes DC...')
     for i in range(1,len(img_blocks_dctq)):
-        img_blocks_dctq[i][0][0] = img_blocks_dctq[i-1][0][0] + img_blocks_dctq[i][0][0]
+        # aca img_blocks_dctq ses de dype=np.uint8
+        # para mi aca hay algo medio raro con esto: 
+            # https://stackoverflow.com/questions/7559595/python-runtimewarning-overflow-encountered-in-long-scalars
+        # dice que en python hicieron su propio check de overflow 
+        limit_dac = 255 - img_blocks_dctq[i-1][0][0]
+        if  img_blocks_dctq[i][0][0] > limit_dac:
+            img_blocks_dctq[i][0][0] = 255
+        else:
+            img_blocks_dctq[i][0][0] = img_blocks_dctq[i-1][0][0] + img_blocks_dctq[i][0][0]
 
     # Armo la matrz de matrices y vuelvo a al imagen original
     img_blocks_dctq = np.array(np.array_split(img_blocks_dctq,height_aux//N))
@@ -400,17 +408,15 @@ def block_qidct(img_blocks_dctq, QTable):
     """
 
     # Descuantizo con la tabla
-    img_blocks_dct = np.zeros(img_blocks_dctq.shape, dtype = np.float)
+    img_blocks_dct = np.empty(img_blocks_dctq.shape, dtype = None)
     dprint('Descuantizando coeficientes...')
-    k = 0
     for i in range(len(img_blocks_dct)):
         for j in range(len(img_blocks_dct[0])):
             img_blocks_dct[i][j] = np.multiply(img_blocks_dctq[i][j], QTable)
-            k +=1
 
     # Aplico DCT
     dprint('Calculando IDCT...')
-    img_blocks = np.zeros(img_blocks_dct.shape,dtype=np.int)
+    img_blocks = np.empty(img_blocks_dct.shape,dtype=None)
     for i in range(len(img_blocks)):
         for j in range(len(img_blocks[0])):
             img_blocks[i][j] = np.clip(idct2(img_blocks_dct[i][j]),-128,127)
