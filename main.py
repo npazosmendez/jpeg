@@ -3,7 +3,7 @@ from jpeg import *
 from skimage import io
 import matplotlib.pyplot as plt
 import seaborn as sns
-from util import *
+# from util import *
 
 img = io.imread('bmp/lena.bmp')
 print("Dimensiones originales:",img.shape)

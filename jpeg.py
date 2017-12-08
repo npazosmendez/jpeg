@@ -16,7 +16,23 @@ import huffman
 from libs.color import *
 from collections import Counter
 import matplotlib.pyplot as plt
-from util import *
+# from util import *
+
+DEBUG = False
+
+def dprint(msg, *demases):
+    if DEBUG:
+        print(msg,demases)
+
+def img_size(img):
+    # cant_canales * alto * ancho / 1000 -> [peso en kB]
+    if len(img.shape) > 2:
+        # la imagen tiene mas de un canal
+        return img.shape[2]*img.shape[0]*img.shape[1] / 1000
+    else:
+        # la imagen es monocroma
+        return img.shape[0]*img.shape[1] / 1000
+
 
 class jpeg:
     def __init__(self, YCbCr_binstring, YCbCr_huffdic, height, width, NM = (8,8), \
@@ -135,12 +151,12 @@ def jpeg_mono_encode(img, NM, QTable):
 
     # Codificación de coeficientes DC
     img_blocks_qdct = np.concatenate(img_blocks_qdct)
-    print('Codificando coeficientes DC...')
+    dprint('Codificando coeficientes DC...')
     for i in range(len(img_blocks_qdct)-1,0,-1):
         img_blocks_qdct[i][0][0] = img_blocks_qdct[i][0][0] - img_blocks_qdct[i-1][0][0]
 
     # Obtención de secuencia zig-zag
-    print('Obteniendo secuencia completa...')
+    dprint('Obteniendo secuencia completa...')
     if True:
         # zig-zag
         seq = fast_ZZPACK(img_blocks_qdct)
@@ -149,7 +165,7 @@ def jpeg_mono_encode(img, NM, QTable):
         seq = np.concatenate(np.concatenate(img_blocks_qdct))
 
     # Codificación entrópica
-    print('Comprimiendo...')
+    dprint('Comprimiendo...')
     # cada simbolo K se reduce a una tupla (C,k), donde C indica la cantidad
     # de ceros que tiene antes (por bloque)
     seq_comp = []
@@ -170,9 +186,9 @@ def jpeg_mono_encode(img, NM, QTable):
 
     (binstring, huffdic) = huffman_compress(seq_comp)
 
-    print('Compresión finalizada.')
-    print('Tamaño en Kbytes original: \t', img.shape[0]*img.shape[1]*8 / 8 / 1000)
-    print('Tamaño en Kbytes comprimido: \t', len(binstring) / 8 / 1000)
+    dprint('Compresión finalizada.')
+    dprint('Tamaño en Kbytes original: \t', img_size(img))
+    dprint('Tamaño en Kbytes comprimido: \t', len(binstring) / 8 / 1000)
 
     res = (binstring, huffdic)
     return res
@@ -196,7 +212,7 @@ def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
         ancho = ancho + M-ancho%M
 
     # Decodificación entrópica
-    print('Descomprimiendo...')
+    dprint('Descomprimiendo...')
     seq_comp = huffman_uncompress(binstring, huffdic)
 
     # Descompresión de secuencia
@@ -214,7 +230,7 @@ def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
             cuantos += C + 1
 
     # Obtención de matrices a partir de secuencias zig-zag
-    print('Desarmando secuencia...')
+    dprint('Desarmando secuencia...')
     if True:
         # zig-zag
         img_blocks_dctq = zig_zag_unpacking(seq,N,M)
@@ -228,7 +244,7 @@ def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
 
 
     # Decodificación de coeficientes DC
-    print('Decodificando coeficientes DC...')
+    dprint('Decodificando coeficientes DC...')
     for i in range(1,len(img_blocks_dctq)):
         img_blocks_dctq[i][0][0] = img_blocks_dctq[i-1][0][0] + img_blocks_dctq[i][0][0]
 
@@ -239,7 +255,7 @@ def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
     # Si hubo padding, se lo quito
     img = img[0:height,0:width]
 
-    print('Decodificación finalizada.')
+    dprint('Decodificación finalizada.')
     return img
 
 
@@ -333,25 +349,25 @@ def block_qdct(img, NM, QTable):
     M = NM[1]
 
     # Shifteo rango
-    print('Shifteando rangos...')
+    dprint('Shifteando rangos...')
     unos = np.ones(img.shape,dtype=np.int)
     img = img - unos*128
 
     # Particiono en bloques
-    print('Particionando en bloques',N,'x',M,'...')
+    dprint('Particionando en bloques',N,'x',M,'...')
     img_blocks = np.array_split(img,img.shape[0]//N,axis=0) # horizontal
     for i in range(len(img_blocks)):
         img_blocks[i] = np.array_split(img_blocks[i],img.shape[1]//M,axis=1) # vertical
 
     # Aplico DCT
-    print('Calculando DCT...')
+    dprint('Calculando DCT...')
     img_blocks_qdct = np.copy(img_blocks)
     for i in range(len(img_blocks)):
         for j in range(len(img_blocks[0])):
             img_blocks_qdct[i][j] = dct2(img_blocks[i][j])
 
     # Cuantizo con la tabla
-    print('Cuantizando coeficientes...')
+    dprint('Cuantizando coeficientes...')
     img_blocks_dctq = np.empty(img_blocks_qdct.shape, dtype = np.int)
     for i in range(len(img_blocks)):
         for j in range(len(img_blocks[0])):
@@ -372,7 +388,7 @@ def block_qidct(img_blocks_dctq, QTable):
 
     # Descuantizo con la tabla
     img_blocks_dct = np.zeros(img_blocks_dctq.shape, dtype = np.float)
-    print('Descuantizando coeficientes...')
+    dprint('Descuantizando coeficientes...')
     k = 0
     for i in range(len(img_blocks_dct)):
         for j in range(len(img_blocks_dct[0])):
@@ -380,7 +396,7 @@ def block_qidct(img_blocks_dctq, QTable):
             k +=1
 
     # Aplico DCT
-    print('Calculando IDCT...')
+    dprint('Calculando IDCT...')
     img_blocks = np.zeros(img_blocks_dct.shape,dtype=np.int)
     for i in range(len(img_blocks)):
         for j in range(len(img_blocks[0])):
@@ -391,7 +407,7 @@ def block_qidct(img_blocks_dctq, QTable):
     img = np.concatenate(img_blocks,axis=1)
 
     # Shifteo rango
-    print('Shifteando rangos...')
+    dprint('Shifteando rangos...')
     unos = np.ones(img.shape,dtype=np.int)
     img = img + unos*128
 
