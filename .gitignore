@@ -104,3 +104,4 @@ ENV/
 docs/*
 .DS_Store
 *.swp
+tags
