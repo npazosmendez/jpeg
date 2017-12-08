@@ -74,7 +74,15 @@ def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
         [49,64,78,87,103,121,120,101],\
         [72,92,95,98,112,100,103,99],\
         ])):
-
+    """
+    Comprime y codifica la imagen de 3 canales "img" de mapa de bits a JPEG.
+    * Input:
+        img: matriz de HxWx3 (la imagen de 3 canales a codificar)
+        Q: entero de 1 a 100 (calidad de imagen comprimida)
+        NM: tupla de enteros (tamaño de bloque del algoritmo JPEG)
+        QTable: matriz de NxM (tabla de cuantización de coeficientes)
+    * Output: instancia de clase jpeg.
+    """
     assert(0 < Q and 100 >= Q)
     factor = (100 - Q + 1)/2
 
@@ -83,8 +91,6 @@ def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
     img_Y = img_YCbCr[:,:,0]
     img_Cb = img_YCbCr[:,:,1]
     img_Cr = img_YCbCr[:,:,2]
-
-
 
     # Codifico los tres canales como JPEG en tira de bits
     (Ybinstring, Yhuffdic) = jpeg_mono_encode(img_Y, NM, QTable*factor)
@@ -102,41 +108,44 @@ def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
     return res
 
 def jpeg_decode(jpeg):
-
+    """
+    Decodifica una instancia de la clase 'jpeg' a una imagen en mapa de bits.
+    * Input:
+        jpeg: instancia de clase 'jpeg'
+    * Output: matriz de HxWx3 (los 3 canales de la imagen en mapa de bits)
+    """
+    # Decodifico de JPEG a mapa de bits cada canal Y, Cb, Cr
     img_Y = jpeg_mono_decode(jpeg.Ybinstring, jpeg.Yhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
     img_Cb = jpeg_mono_decode(jpeg.Cbbinstring, jpeg.Cbhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
     img_Cr = jpeg_mono_decode(jpeg.Crbinstring, jpeg.Crhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
 
-
+    # Uno los tres canales en una matrix de alto x ancho x 3
     img_YCbCr = np.empty((img_Y.shape[0],img_Y.shape[1],3), dtype= np.uint8)
     img_YCbCr[:,:,0] = img_Y
     img_YCbCr[:,:,1] = img_Cb
     img_YCbCr[:,:,2] = img_Cr
 
-
-
+    # Cambio de espacio de color: YCbCr -> RGB
     img_RGB = YCbCr2RGB(img_YCbCr)
-
 
     return img_RGB
 
 def jpeg_mono_encode(img, NM, QTable):
     """
     Codifica una imagen de un único canal en mapa de bits a JPEG.
+    Esta función no debería usarse directamente por el usuario. Para codificar
+    a JPEG véase 'jpeg_encode'.
     * Input:
         img: array bidimensional (img de un solo canal, por ahora)
         NM : tupla de naturales (tamaño de bloque, (8,8) por defecto)
         QTable: array bidimensional de NxM (tabla de cuantización de coeficientes)
     * Output: instancia de la clase jpeg
     """
-
     assert(len(QTable) == NM[0])
     assert(len(QTable[0]) == NM[1])
 
     N = NM[0]
     M = NM[1]
-    alto = img.shape[0]
-    ancho = img.shape[1]
 
     # 1-padding para que altura%N=0 y ancho%M=0
     if not(img.shape[0] % N == 0):
@@ -196,20 +205,27 @@ def jpeg_mono_encode(img, NM, QTable):
 def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
     """
     Decodifica una imagen de JPEG a mapa de bits.
-    * Input (sujeto a modificaciones):
-        jpeg: instancia de la clase jpeg
+    Esta función no debería usarse directamente por el usuario. Para decodificar
+    JPEG véase 'jpeg_decode'.
+    * Input:
+        binstring: string de 0/1 (datos que representan la imagen en jpeg)
+        huffdic: diccionario string de 0/1 -> símbolo (para decodificar binstring)
+        NM: tupla de naturales
+        QTable: matriz de NxM
+        height: natural (altura de la imagen)
+        width: natural (ancho de la imagen)
     * Output: imagen en mapa de bits
     """
-    alto = height
-    ancho = width
+    height_aux = height
+    width_aux = width
     N = NM[0]
     M = NM[1]
 
     # Tomo alturas auxiliares, por si hay padding
-    if not(alto % N == 0):
-        alto = alto + N-alto%N
-    if not(ancho % M == 0):
-        ancho = ancho + M-ancho%M
+    if not(height_aux % N == 0):
+        height_aux = height_aux + N-height_aux%N
+    if not(width_aux % M == 0):
+        width_aux = width_aux + M-width_aux%M
 
     # Decodificación entrópica
     dprint('Descomprimiendo...')
@@ -249,7 +265,7 @@ def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
         img_blocks_dctq[i][0][0] = img_blocks_dctq[i-1][0][0] + img_blocks_dctq[i][0][0]
 
     # Armo la matrz de matrices y vuelvo a al imagen original
-    img_blocks_dctq = np.array(np.array_split(img_blocks_dctq,alto//N))
+    img_blocks_dctq = np.array(np.array_split(img_blocks_dctq,height_aux//N))
     img = block_qidct(img_blocks_dctq,QTable)
 
     # Si hubo padding, se lo quito
@@ -279,12 +295,10 @@ def zig_zag_unpacking(zig_zagged_array,N,M):
     recorridos zig-zag de varias matrices.
     Input:
     * zig_zagged_array: arreglo de enteros
-    * N,M : enteros
+    * N,M : naturales
     Precondición: largo(zig_zagged_array) es múltiplo de N*M
     Output: arreglo de matrices de NxM
     """
-    # IN: zig-zagged array, post huffman decompression
-    # OUT: 8x8 matrix, in previous-to-huffman order
 
     # Variable a devolver
     block_array = np.empty((len(zig_zagged_array)//(N*M),N,M),dtype=np.int8)
@@ -325,7 +339,6 @@ def huffman_uncompress(binstring, huffdic):
             seq.append(huffdic[string])
             string = ""
     return seq
-
 
 
 def dct2(block):
