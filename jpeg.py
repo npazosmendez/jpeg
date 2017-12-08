@@ -408,7 +408,8 @@ def block_qidct(img_blocks_dctq, QTable):
     """
 
     # Descuantizo con la tabla
-    img_blocks_dct = np.empty(img_blocks_dctq.shape, dtype = None)
+    img_blocks_shape = (img_blocks_dctq.shape[0], img_blocks_dctq.shape[1])
+    img_blocks_dct = np.empty(img_blocks_shape, dtype = np.ndarray)
     dprint('Descuantizando coeficientes...')
     for i in range(len(img_blocks_dct)):
         for j in range(len(img_blocks_dct[0])):
@@ -416,14 +417,14 @@ def block_qidct(img_blocks_dctq, QTable):
 
     # Aplico DCT
     dprint('Calculando IDCT...')
-    img_blocks = np.empty(img_blocks_dct.shape,dtype=None)
+    img_blocks = np.empty(img_blocks_dct.shape,dtype=np.ndarray)
     for i in range(len(img_blocks)):
         for j in range(len(img_blocks[0])):
             img_blocks[i][j] = np.clip(idct2(img_blocks_dct[i][j]),-128,127)
 
     # Uno los bloques
-    img_blocks = np.concatenate(img_blocks.tolist(),axis=1)
-    img = np.concatenate(img_blocks,axis=1)
+    img_blocks_conc = np.concatenate(img_blocks.tolist(),axis=1)
+    img = np.concatenate(img_blocks_conc,axis=1)
 
     # Shifteo rango
     dprint('Shifteando rangos...')
