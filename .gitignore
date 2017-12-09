@@ -105,3 +105,14 @@ docs/*
 .DS_Store
 *.swp
 tags
+
+# latex
+*.aux
+*.fdb_latexmk
+*.fls
+*.nav
+*.pdf
+*.out
+*.snm
+*.gz
+*.toc

@@ -1,0 +1,36 @@
+\documentclass{beamer}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern} % para cualquier tamaño de letra
+\usetheme{Copenhagen}
+\setbeamercovered{transparent=30}
+
+\begin{document}
+
+\title{Compresión JPEG}
+\author{Balbi Pablo Luis, Pazos Méndez Nicolás Javier}
+\date{\today}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \frametitle{Cómo viene la cosa...}
+    \tableofcontents[hideallsubsections]
+\end{frame}
+
+\section{El método de compresión JPEG}
+\begin{frame}
+    \frametitle{El método de compresión JPEG}
+        Cuatro pasos fundamentales:
+        \begin{itemize}
+            \item Separar la imagen en cuadrados de $8 \times 8$
+            \item Aplicar la DCT\footnote{transformada del coseno discreta} a cada cuadrado
+            \item Cuantizar los coeficientes del paso anterior
+            \item Comprimir el conjunto de coeficientes finales
+        \end{itemize}
+
+\end{frame}
+
+\end{document}
