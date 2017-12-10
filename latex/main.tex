@@ -24,13 +24,69 @@
 \begin{frame}
     \frametitle{El método de compresión JPEG}
         Cuatro pasos fundamentales:
-        \begin{itemize}
+        \begin{enumerate}
             \item Separar la imagen en cuadrados de $8 \times 8$
             \item Aplicar la DCT\footnote{transformada del coseno discreta} a cada cuadrado
             \item Cuantizar los coeficientes del paso anterior
             \item Comprimir el conjunto de coeficientes finales
-        \end{itemize}
+        \end{enumerate}
 
+\end{frame}
+
+\begin{frame}
+    \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
+    \begin{minipage}[t]{0.48\linewidth}
+        \includegraphics[width=5cm, height=5cm]{fig/lena.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\linewidth}
+        \includegraphics[width=5cm, height=5cm]{fig/lena_blocks.png}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
+    \textbf{¿Por qué partir la imagen en bloques?}
+    \begin{itemize}
+        \item Aplicar la DCT a la imagen completa requiere más memoria y es menos modular. % sirve que sea modular para cosas tipo GPU
+        \item Las imágenes no suelen ser completamente homogéneas. Analizar las frecuencias de la imagen completa no es lo mejor para comprimir.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
+    \includegraphics[width=5cm, height=5cm]{fig/no_homogenea.png}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Aplicar la DCT a cada cuadrado}
+    [TODO] shifter -128 y aplicar la transformada
+
+    [TODO] por qué usamos este espacio? porque las frecuencias bajas nos importan más
+
+    [TODO] darles nombres a los coeficientes DC/AC para referirse después
+\end{frame}
+
+\begin{frame}
+    \frametitle{Cuantizar los coeficientes}
+    [TODO] por qué cuantizamos? Para comprimir más y más fácil. bajamos la entropía.
+    Es importante entender que no estamos descartando por frecuencias, sino
+    que estamos estableciendo como un step.
+
+    [TODO] cómo cuantizamos? Con la tabla de cuantización
+\end{frame}
+
+\begin{frame}
+    \frametitle{Comprimir el conjunto de coeficientes finales}
+
+    [TODO] ahora que bajamos mucho la entropía podemos comprimir mucho más. Pasos:
+    \begin{enumerate}
+        \item Codificar los coeficientes DC
+        \item Desarmar en $zig-zag$ cada cuadrado
+        \item Comprimir cada cuadrado como tuplas $(\# ceros \, antes, \, valor)$
+        \item Codificar las tuplas con Huffman
+
+    \end{enumerate}
 \end{frame}
 
 \end{document}
