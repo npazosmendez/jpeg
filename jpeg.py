@@ -16,7 +16,7 @@ import huffman
 from libs.color import *
 from collections import Counter
 import matplotlib.pyplot as plt
-# from util import *
+from scipy.ndimage.interpolation import zoom
 
 DEBUG = False
 
@@ -64,7 +64,7 @@ class jpeg:
         return (len(self.Ybinstring) + len(self.Cbbinstring) + len(self.Crbinstring))/ 8 /1000
 
 
-def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
+def jpeg_encode(img, Q = 100, NM = (8,8), QTable = np.array([\
         [16,11,10,16,24,40,51,61],\
         [12,12,14,19,26,58,60,55],\
         [14,13,16,24,40,57,69,56],\
@@ -85,6 +85,10 @@ def jpeg_encode(img, Q, NM = (8,8), QTable = np.array([\
     """
     assert(0 < Q and 100 >= Q)
     factor = (100 - Q + 1)/2
+
+    if not(len(QTable)==NM[0]) or not(len(QTable[0])==NM[1]):
+        dprint(' !! Adaptando tabla de cuantización...')
+        QTable = zoom(QTable,[NM[0]/len(QTable),NM[1]/len(QTable[0])])
 
     # Convierto a espacio YCbCr
     img_YCbCr = RGB2YCbCr(img)
