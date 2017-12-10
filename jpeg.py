@@ -114,6 +114,7 @@ def jpeg_decode(jpeg):
         jpeg: instancia de clase 'jpeg'
     * Output: matriz de HxWx3 (los 3 canales de la imagen en mapa de bits)
     """
+
     # Decodifico de JPEG a mapa de bits cada canal Y, Cb, Cr
     img_Y = jpeg_mono_decode(jpeg.Ybinstring, jpeg.Yhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
     img_Cb = jpeg_mono_decode(jpeg.Cbbinstring, jpeg.Cbhuffdic, (jpeg.N, jpeg.M), jpeg.QTable, jpeg.height, jpeg.width)
@@ -263,9 +264,9 @@ def jpeg_mono_decode(binstring, huffdic, NM, QTable, height, width):
     dprint('Decodificando coeficientes DC...')
     for i in range(1,len(img_blocks_dctq)):
         # aca img_blocks_dctq ses de dype=np.uint8
-        # para mi aca hay algo medio raro con esto: 
+        # para mi aca hay algo medio raro con esto:
             # https://stackoverflow.com/questions/7559595/python-runtimewarning-overflow-encountered-in-long-scalars
-        # dice que en python hicieron su propio check de overflow 
+        # dice que en python hicieron su propio check de overflow
         limit_dac = 255 - img_blocks_dctq[i-1][0][0]
         if  img_blocks_dctq[i][0][0] > limit_dac:
             img_blocks_dctq[i][0][0] = 255
@@ -330,6 +331,12 @@ def zig_zag_unpacking(zig_zagged_array,N,M):
 
 def huffman_compress(seq):
     probs = list(Counter(seq).items()) # Calculo los pesos
+    # Si hay un solo simbolo, huffman considera que no hay
+    # información para codificar. Caso aparte:
+    if len(probs) == 1:
+        binstring = '1'*probs[0][1]
+        huffdic_decode = {'1':probs[0][0]}
+        return (binstring,huffdic_decode)
     huffdic_encode = huffman.codebook(probs)
     huffdic_decode = {}
     binstring = ""
@@ -406,7 +413,6 @@ def block_qidct(img_blocks_dctq, QTable):
     * Output: imagen original, formada por las inversas del coseno de las
     matrices del input.
     """
-
     # Descuantizo con la tabla
     img_blocks_shape = (img_blocks_dctq.shape[0], img_blocks_dctq.shape[1])
     img_blocks_dct = np.empty(img_blocks_shape, dtype = np.ndarray)
