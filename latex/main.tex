@@ -47,7 +47,7 @@
 
         $F(u,v)=\frac{1}{NM}C(u)C(v)\,\sum_{x=0}^{7} \sum_{y=0}^{7}\,I(x,y)\,B(u,v,x,y)$
 
-        \vspace{3mm} 
+        \vspace{3mm}
         $f(x,y)=\frac{1}{NM}\,\sum_{x=0}^{7} \sum_{y=0}^{7}\,C(u)C(v)\,F(u,v)\,B(u,v,x,y)$
 
         \vspace{3mm}
@@ -55,8 +55,8 @@
         \vspace{3mm}
 
         $B(u,v,x,y) = cos\frac{(2x+1)u\pi}{16}cos\frac{(2y+1)v\pi}{16}$
-        \[   
-        C(j) = 
+        \[
+        C(j) =
              \begin{cases}
                  \frac{1}{\sqrt{2}}\text{ si $j=0$}\\
                  1 \text{ sino}\\
@@ -68,9 +68,10 @@
 \end{frame}
 
 \begin{frame}
+    % la imagen se divide así...
     \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
     \begin{minipage}[t]{0.48\linewidth}
-        \includegraphics[width=5cm, height=5cm]{fig/lena.png}
+        \includegraphics[width=5cm, height=5cm]{fig/lena.jpg}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.48\linewidth}
@@ -79,6 +80,7 @@
 \end{frame}
 
 \begin{frame}
+    % explicar por qué partimos la imagen, y por qué no aplicamos la DCT a la imagen completa
     \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
     \textbf{¿Por qué partir la imagen en bloques?}
     \begin{itemize}
@@ -88,17 +90,142 @@
 \end{frame}
 
 \begin{frame}
+    % ya mencionamos (supuestamente...) que el método de JPEG se basa
+    % en trabajar en el espacio de frecuencias, y 'descartar' frecuencias
+    % que no sean muy relevantes.
+
+    % qué pasa si usamos la DCT para comprimir sobre la imagen completa?
+    % esta imagen no es homogénea, y las frecuencias de cada una de las 4 partes
+    % es muy distinta a las demás. Para terminar de formar uno de los cuartos
+    % de forma razonable se necesitan muchísimas frecuencias altas que vayan
+    % anulando cosas donde corresponda.
+
+    % si dividimos en partes (8x8 en este caso) podemos tratar diferente
+    % a las frecuencias de cada bloque, y reconstruimos la imagen por partes
     \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
-    \includegraphics[width=5cm, height=5cm]{fig/no_homogenea.png}
+    \textbf{Usando la DCT sobre la imagen completa}
+
+    Reconstrucción de una imagen utilizando la mitad de los coeficientes de su DCT (los de mayores frecuencias).
+
+    \begin{minipage}[t]{0.4\linewidth}
+        \begin{center}
+            \includegraphics[scale=1.25]{fig/no_homogenea.png}\\         Original
+        \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.4\linewidth}
+        \begin{center}
+            \includegraphics[scale=1.25]{fig/no_homogenea_comprimida.png}\\
+            Reconstruida
+        \end{center}
+    \end{minipage}
+
 \end{frame}
 
 \begin{frame}
+    \begin{center}
+        \includegraphics[scale=2]{fig/no_homogenea.png}
+    \end{center}
+\end{frame}
+\begin{frame}
+    \begin{center}
+        \includegraphics[scale=2]{fig/no_homogenea_comprimida.png}
+    \end{center}
+\end{frame}
+
+
+
+\begin{frame}
+    % ahora a cada bloque le hacemos...
+    % abajo se ve un ejemplo de un bloque de 8x8 shifteado, y a la derecha
+    % sus DCT. acá ya se ve algo que nos gusta. la DCT parecería ser reduntante
     \frametitle{Aplicar la DCT a cada cuadrado}
-    [TODO] shifter -128 y aplicar la transformada
+    \begin{itemize}
+        \item \textit{Shiftear} los 64 valores de [0..255] a [$-$128..127].
+        \item Aplicar la DCT al cuadrado.
+    \end{itemize}
 
-    [TODO] por qué usamos este espacio? porque las frecuencias bajas nos importan más
+    \includegraphics[scale=0.2]{fig/8x8random.png}
+    \includegraphics[scale=0.2]{fig/8x8random_dct.png}
+\end{frame}
 
-    [TODO] darles nombres a los coeficientes DC/AC para referirse después
+\begin{frame}
+    % la DCT son los coeficientes de la combinación lineal de esta base (en 8x8)
+    % que forma la imagen original. es la misma idea que en Fourier
+    \begin{center}
+        \includegraphics[scale=0.4]{fig/dctbase.png}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    % por qué nos sirve la DCT? ...
+    \frametitle{Aplicar la DCT a cada cuadrado}
+    \textbf{¿Por qué nos sirve este espacio?}
+    \begin{itemize}
+        \item Para el ojo humano, las frecuencias bajas cargan más información que las altas $\rightarrow$ guardamos lo que más importa.
+        \item Las imágenes con las que tratamos no suelen tener frecuencias altas: muchos coeficientes `nulos' $\rightarrow$ fácil codificación.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    % acá podemos ver ejemplos de distintos bloques de 8x8 y sus dct abajo.
+    % puede verse cómo cuando la imagen es más 'suave' los coeficientes de
+    % las frecuencias bajas son los de mayor magnitud.
+    % en las imágenes con las que tratamos, los bloques suaves son mucho más
+    % comunes, y los bloques no tan suaves no tiene mucha información de interés.
+    % vamos a estar trabajando con muchas cosas de la pinta del último DCT que se
+    % ve aquí
+
+    % para que recordemos y nos refiramos más adelante, al primero coeficiente
+    % se le llama DC, y a los demás AC
+
+    \frametitle{Aplicar la DCT a cada cuadrado}
+    \textbf{Bloques de 8 x 8 y sus DCT}
+
+    \begin{center}
+        \includegraphics[scale=0.12]{fig/8x8random0.png}
+        \hspace{0.5cm}
+        \includegraphics[scale=0.12]{fig/8x8random1.png}
+        \hspace{0.5cm}
+        \includegraphics[scale=0.12]{fig/8x8random2.png}
+
+        \includegraphics[scale=0.12]{fig/8x8random_dct0.png}
+        \hspace{0.5cm}
+        \includegraphics[scale=0.12]{fig/8x8random_dct1.png}
+        \hspace{0.5cm}
+        \includegraphics[scale=0.12]{fig/8x8random_dct2.png}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}
+    % acá vemos cómo se va formando lena a medida que usamos más frecuencias.
+    % la imagen 'i' está usando las primeras i frecuencias en ambos sentidos.
+
+    % Vemos como se va formando, y con las primeras 40 frecuencias
+    % ya vemos a lena, y son 512 en total. o sea con poquita información
+    % guardada podríamos tener una imagen muy aproximada. entonces parecería que
+    % aplicar la DCT a la imagen completa funciona! WAIT .... (proxima diapo)
+    \begin{columns}
+        \column{\dimexpr\paperwidth-10pt}
+        \includegraphics[scale=0.56]{fig/lenas.png}
+      \end{columns}
+
+\end{frame}
+
+
+\begin{frame}
+    % acá vemos a lena reconstruina con las priemras 100 frecuencias en ambos
+    % sentidos. acá se evidencian los artifacts groseros que produce esto.
+    % queda como todo ondulado. esto tiene que ver con el ejemplo de la imagen
+    % no homogénea que veiamos: distintas zonas de la imagen tienen distintas
+    % frecuencias predominantes, y para obtener dos partes de la imagen distintas
+    % bien formadas, necesitamos casi todas las frecuencias
+    Reconstrucción de Lena con las 100 frecuencias más bajas en ambos sentidos.
+    \begin{center}
+
+        \includegraphics[scale=0.4]{fig/lenas_100frecuencias.png}
+    \end{center}
 \end{frame}
 
 \begin{frame}
@@ -110,9 +237,9 @@
 
     \vspace{5mm}
     $B_{0,0}$
-    
 
-    
+
+
 \end{frame}
 
 \begin{frame}
@@ -139,10 +266,10 @@
 \begin{frame}
     \frametitle{ideas exps}
     \begin{itemize}
-        \item Algo como esto: 
+        \item Algo como esto:
             \url{https://res.cloudinary.com/ddxwdqwkr/image/upload/q_100/v1502426282/essential-image-optimization/Modern-Image5.jpg}
     \end{itemize}
-    
+
 \end{frame}
 
 \end{document}
