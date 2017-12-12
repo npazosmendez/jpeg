@@ -67,9 +67,11 @@
     \end{center}
 \end{frame}
 
+\subsection{Separar la imagen en cuadrados de 8 x 8}
+
 \begin{frame}
     % la imagen se divide así...
-    \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
+    \frametitle{1. Separar la imagen en cuadrados de $8 \times 8$}
     \begin{minipage}[t]{0.48\linewidth}
         \includegraphics[width=5cm, height=5cm]{fig/lena.jpg}
     \end{minipage}
@@ -81,7 +83,7 @@
 
 \begin{frame}
     % explicar por qué partimos la imagen, y por qué no aplicamos la DCT a la imagen completa
-    \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
+    % \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
     \textbf{¿Por qué partir la imagen en bloques?}
     \begin{itemize}
         \item Aplicar la DCT a la imagen completa requiere más memoria y es menos modular. % sirve que sea modular para cosas tipo GPU
@@ -102,7 +104,7 @@
 
     % si dividimos en partes (8x8 en este caso) podemos tratar diferente
     % a las frecuencias de cada bloque, y reconstruimos la imagen por partes
-    \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
+    % \frametitle{Separar la imagen en cuadrados de $8 \times 8$}
     \textbf{Usando la DCT sobre la imagen completa}
 
     Reconstrucción de una imagen utilizando la mitad de los coeficientes de su DCT (los de mayores frecuencias).
@@ -134,12 +136,12 @@
 \end{frame}
 
 
-
+\subsection{Aplicar la DCT a cada cuadrado}
 \begin{frame}
     % ahora a cada bloque le hacemos...
     % abajo se ve un ejemplo de un bloque de 8x8 shifteado, y a la derecha
     % sus DCT. acá ya se ve algo que nos gusta. la DCT parecería ser reduntante
-    \frametitle{Aplicar la DCT a cada cuadrado}
+    \frametitle{2. Aplicar la DCT a cada cuadrado}
     \begin{itemize}
         \item \textit{Shiftear} los 64 valores de [0..255] a [$-$128..127].
         \item Aplicar la DCT al cuadrado.
@@ -159,7 +161,7 @@
 
 \begin{frame}
     % por qué nos sirve la DCT? ...
-    \frametitle{Aplicar la DCT a cada cuadrado}
+    % \frametitle{Aplicar la DCT a cada cuadrado}
     \textbf{¿Por qué nos sirve este espacio?}
     \begin{itemize}
         \item Para el ojo humano, las frecuencias bajas cargan más información que las altas $\rightarrow$ guardamos lo que más importa.
@@ -179,7 +181,7 @@
     % para que recordemos y nos refiramos más adelante, al primero coeficiente
     % se le llama DC, y a los demás AC
 
-    \frametitle{Aplicar la DCT a cada cuadrado}
+    % \frametitle{Aplicar la DCT a cada cuadrado}
     \textbf{Bloques de 8 x 8 y sus DCT}
 
     \begin{center}
@@ -223,10 +225,10 @@
     % bien formadas, necesitamos casi todas las frecuencias
     Reconstrucción de Lena con las 100 frecuencias más bajas en ambos sentidos.
     \begin{center}
-
         \includegraphics[scale=0.4]{fig/lenas_100frecuencias.png}
     \end{center}
 \end{frame}
+
 
 \begin{frame}
     % Aca pones algo acerca de DC vs AC.
@@ -234,27 +236,84 @@
     % la DCT para u=v=0, que es la media
     \frametitle{Caracterizando un bloque}
     Un bloque es también una matriz $B \in A^{8x8}$
-
     \vspace{5mm}
     $B_{0,0}$
+\end{frame}
 
+
+\subsection{Cuantizar los coeficientes}
+
+\begin{frame}
+    \frametitle{3. Cuantizar los coeficientes}
+    \begin{itemize}
+        \item Dada la matriz de cuantización, reemplazar cada coeficiente de la DCT por
+            la división entera entre éste y el de la matriz.
+    \end{itemize}
+
+    \vfill
+
+    \begin{minipage}[t]{0.3\linewidth}
+        \begin{center}
+            \includegraphics[scale=0.175]{fig/DCT_coefs.png}\\
+            \small Coeficientes DCT
+        \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.3\linewidth}
+        \begin{center}
+            \includegraphics[scale=0.175]{fig/QTable.png}\\
+            \small Matriz de cuantización
+        \end{center}    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.3\linewidth}
+        \begin{center}
+            \includegraphics[scale=0.175]{fig/quantized.png}\\
+            \small Cociente
+        \end{center}    \end{minipage}
 
 
 \end{frame}
 
-\begin{frame}
-    \frametitle{Cuantizar los coeficientes}
-    [TODO] por qué cuantizamos? Para comprimir más y más fácil. bajamos la entropía.
-    Es importante entender que no estamos descartando por frecuencias, sino
-    que estamos estableciendo como un step.
 
-    [TODO] cómo cuantizamos? Con la tabla de cuantización
+\begin{frame}
+    % [TODO] por qué cuantizamos? Para comprimir más y más fácil. bajamos la entropía.
+    % Es importante entender que no estamos descartando por frecuencias, sino
+    % que estamos estableciendo como un step.
+    \textbf{En este paso ocurren dos cosas muy importantes:}
+    \begin{enumerate}
+        \item La entropía de la información baja drásticamente.
+        \item Perdemos información (\textit{lossy compression}).
+    \end{enumerate}
 \end{frame}
 
 \begin{frame}
-    \frametitle{Comprimir el conjunto de coeficientes finales}
+    meter un experimento que mida la entropía antes y después de este paso
+\end{frame}
 
-    [TODO] ahora que bajamos mucho la entropía podemos comprimir mucho más. Pasos:
+\begin{frame}
+    \frametitle{Artifacts}
+    % el artifact más común se da en los bordes, por la eliminación de frecuencias
+    % bajas
+    \begin{minipage}[t]{0.4\linewidth}
+        \begin{center}
+            \includegraphics[width=4cm, height=4cm]{fig/borde.png}\\
+            Imagen original
+        \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.4\linewidth}
+        \begin{center}
+        \includegraphics[width=4cm, height=4cm]{fig/borde_jpeg.png}\\
+        Imagen comprimida con JPEG
+        \end{center}
+    \end{minipage}
+\end{frame}
+
+\subsection{Compresión entrópica}
+\begin{frame}
+    % ahora que bajamos mucho la entropía podemos comprimir mucho más. Pasos:
+    La codificación entrópica típica de JPEG se puede dividir en 4 pasos:
+    \frametitle{4. Comprimir el conjunto de coeficientes finales}
     \begin{enumerate}
         \item Codificar los coeficientes DC
         \item Desarmar en $zig-zag$ cada cuadrado
