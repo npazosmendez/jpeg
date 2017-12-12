@@ -316,17 +316,78 @@
 
 \subsection{Compresión entrópica}
 \begin{frame}
-    % ahora que bajamos mucho la entropía podemos comprimir mucho más. Pasos:
-    La codificación entrópica típica de JPEG se puede dividir en 4 pasos:
+    % ahora que bajamos mucho la entropía podemos comprimir mucho más.
+    % aca presentamos una versión un poco simplificada. la estándar es muy
+    % parecida, pero difiere en la parte de tuplas/huffman. no corre huffman
+    % cada vez sino que tiene un diccionario guardado, y lo usa sobre otras tuplas
+    % La codificación entrópica típica de JPEG se puede dividir en 4 pasos:
     \frametitle{4. Comprimir el conjunto de coeficientes finales}
     \begin{enumerate}
         \item Codificar los coeficientes DC
         \item Desarmar en $zig-zag$ cada cuadrado
         \item Comprimir cada cuadrado como tuplas $(\# ceros \, antes, \, valor)$
         \item Codificar las tuplas con Huffman
-
     \end{enumerate}
 \end{frame}
+
+\begin{frame}
+    \begin{enumerate}
+        \item Codificar los coeficientes DC: el coeficiente DC de cada bloque se guarda como su diferencia con el del bloque anterior.
+        \item Desarmar en $zig-zag$ cada cuadrado: se arma una secuencia por bloque recorriéndolo en $zig-zag$.
+    \end{enumerate}
+    \vfill
+    \begin{minipage}[t]{0.3\linewidth}
+        \begin{center}
+        \includegraphics[scale=0.10]{fig/zigzag_dc.png}\\
+        \small Bloque 0
+        \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.3\linewidth}
+        \begin{center}
+        \includegraphics[scale=0.10]{fig/zigzag_dc.png}\\
+        \small Bloque 1
+        \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.3\linewidth}
+        \begin{center}
+        \includegraphics[scale=0.10]{fig/zigzag_dc.png}\\
+        \small Bloque 2
+        \end{center}
+    \end{minipage}
+\end{frame}
+
+
+\begin{frame}
+    \begin{enumerate}\addtocounter{enumi}{2}
+        \item Comprimir cada cuadrado como tuplas $(\# ceros \, antes, \, valor)$: cada secuencia del paso anterior de codifica con tuplas que comprimen ceros consecutivos.
+
+        \item Codificar las tuplas con Huffman.
+    \end{enumerate}
+
+    \vfill
+    \begin{center}
+        \textbf{15}, {\color{red} 0}, $-2$, 7, $-1$, $-1$, {\color{red} 0}, {\color{red} 0}, $-1$, {\color{red} 0}, {\color{red} 0}, {\color{red} 0}, {\color{red} 0}, {\color{red} 0}, {\color{red} 0}, {\color{red} 0}, 5, {\color{red} 0}, {\color{red} 0}, ... , {\color{red} 0}
+
+        \vfill
+        $\downarrow$
+
+        {\tiny compresión a tuplas}
+        \vfill
+
+        (\textbf{15}) ({\color{red}1},$-2$) ({\color{red}0},7) ({\color{red}0},$-1$) ({\color{red}0},$-1$) ({\color{red}2},$-1$) ({\color{red}7},5) {\color{red}(0,0)}
+
+        \vfill
+        $\downarrow$
+
+        {\tiny codificación con Huffman}
+        \vfill
+
+        1000111010000111010110 (22 bits)
+    \end{center}
+\end{frame}
+
 \begin{frame}
     \frametitle{ideas exps}
     \begin{itemize}
