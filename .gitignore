@@ -116,3 +116,5 @@ latex/main.pdf
 *.snm
 *.gz
 *.toc
+
+!latex/fig/*.pdf
