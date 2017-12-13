@@ -17,17 +17,10 @@
     \titlepage
 \end{frame}
 
-\begin{frame}
-    \frametitle{Cómo viene la cosa...}
-    \tableofcontents[hideallsubsections]
-\end{frame}
-
 \section{El método de compresión JPEG}
 \begin{frame}
     \frametitle{El método de compresión JPEG}
         Cuatro pasos fundamentales:
-        [NOTE]: Quedrá muy choto aca hacer un dibujito de pipeline a mano, escanearlo y ponerlo?
-        tipo este \url{https://m.eet.com/media/1101219/fig1.jpg}
         \begin{enumerate}
             \item Separar la imagen en cuadrados de $8 \times 8$
             \item Aplicar la DCT\footnote{transformada del coseno discreta} a cada cuadrado
@@ -117,8 +110,8 @@
         \item Aplicar la DCT al cuadrado.
     \end{itemize}
 
-    \includegraphics[scale=0.2]{fig/8x8random.png}
-    \includegraphics[scale=0.2]{fig/8x8random_dct.png}
+    % \includegraphics[scale=0.2]{fig/8x8random.png}
+    % \includegraphics[scale=0.2]{fig/8x8random_dct.png}
 \end{frame}
 
 \begin{frame}
@@ -223,7 +216,7 @@
     % bien formadas, necesitamos casi todas las frecuencias
     Reconstrucción de Lena con las 100 frecuencias más bajas en ambos sentidos.
     \begin{center}
-        \includegraphics[scale=0.4]{fig/lenas_100frecuencias.png}
+        \includegraphics[scale=0.35]{fig/lenas_100frecuencias.png}
     \end{center}
 \end{frame}
 
@@ -389,6 +382,65 @@
         \vfill
 
         1000111010000111010110 (22 bits)
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        \includegraphics[scale=0.15]{fig/text.png}
+
+        \vfill
+
+        \hfill
+        \includegraphics[scale=0.25]{fig/lena.jpg}
+        \hfill
+        \includegraphics[scale=0.25]{fig/landscape.jpg}
+        \hfill
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        \includegraphics[scale=0.7]{fig/FCvsECM.pdf}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+
+        \hfill
+        \includegraphics[scale=0.2]{fig/lena_80.png}
+        \hfill
+        %         94.4124298096
+        \includegraphics[scale=0.2]{fig/paisaje_80.png}
+        % 96.0637166667
+        \hfill
+
+        \vfill
+        {\small ECM $\sim 100$}
+
+    \end{center}
+\end{frame}
+
+
+\begin{frame}
+    \begin{center}
+        \includegraphics[scale=0.2]{fig/txt_80.png}
+
+
+        \vfill
+        {\small ECM $\sim 40$}
+
+    \end{center}
+
+\end{frame}
+
+
+\section{Resumen}
+\begin{frame}
+    \frametitle{Resumiendo}
+    \begin{center}
+        \includegraphics[scale=0.45]{fig/steps.jpeg}
     \end{center}
 \end{frame}
 
