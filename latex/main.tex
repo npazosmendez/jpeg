@@ -478,13 +478,45 @@
 
 \begin{frame}
     \begin{center}
-        CONTEXT SWITCH
+        \textit{this$\rightarrow$context\_switch('ruido')}
     \end{center}
 \end{frame}
 
 \section{Ruido}    
 \begin{frame}
-    ¿Cómo cambia la compresión de una imagen con ruido?
+    \frametitle{¿Cómo cambia la compresión de una imagen con ruido?}
+    \vspace{0mm}
+    \pause
+
+    \noindent\makebox[\linewidth][c]{%
+    \begin{minipage}[t]{0.42\linewidth}
+        \begin{center}
+            \includegraphics[scale=0.3]{fig/lena_contaminada.png}\\
+        \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.42\linewidth}
+        \begin{itemize}
+            \item Ruido $\rightarrow$ frecuencias altas
+            \pause
+            \item Mayor coeficiente en frecuencias altas $\Rightarrow$ menor compresibilidad
+            \pause
+            \item Si fuera puntual, afectaría a un solo bloque. Al estar disperso, la totalidad de
+                la imagen se ve afectada
+        \end{itemize}
+    \end{minipage}
+    }
+
+\end{frame}
+
+\begin{frame}
+    \framesubtitle{¿Qué medimos?}
+    $FC_{\text{imagen contaminada}} - FC_{\text{imagen original}}$\\
+    \vspace{3mm}
+    para distintos factores de calidad\\
+    \vspace{3mm}
+    para distintas distribuciones del ruido
+    
 \end{frame}
 
 \begin{frame}
@@ -505,11 +537,16 @@
 
 \begin{frame}
     \begin{center}
-        \textbf{¿Preguntas?} \\
+        \LARGE\textbf{¿Preguntas?} \\
         \vspace{3mm}
         \includegraphics[scale=0.2]{fig/preguntas.jpg}
     \end{center}
 \end{frame}
 
+\begin{frame}
+    \begin{center}
+        \huge\textbf{¡Gracias!}
+    \end{center}
+\end{frame}
 
 \end{document}

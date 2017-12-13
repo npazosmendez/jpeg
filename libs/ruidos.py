@@ -9,7 +9,7 @@ def add_gaussian_noise(img, mean, sd):
     IMG = np.copy(img)
     for i in range(len(IMG)):
         for j in range(len(IMG[0])):
-            IMG[i,j] += int(random.gauss(mean, sd))
+            IMG[i,j] += np.uint8(random.gauss(mean, sd))
     return IMG
 
 def mult_rayleigh_noise(img, mean, var, dist_vals = None):
