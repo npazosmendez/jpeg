@@ -116,3 +116,5 @@ tags
 *.snm
 *.gz
 *.toc
+
+!latex/fig/*.pdf
