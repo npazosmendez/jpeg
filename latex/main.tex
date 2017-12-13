@@ -37,36 +37,6 @@
 
 \end{frame}
 
-\begin{frame}
-    \frametitle{DCT}
-    \begin{center}
-        Una imagen $I$ de $NM$ pixels, es una matriz en $A^{NM}$, con $A = \{x \in \mathbb{N} \text{ si
-        $0 \leq x \leq 255$}\}$ \vspace{6mm}
-
-        La DCT tiene la siguiente ecuación:\vspace{6mm}
-
-        $F(u,v)=\frac{1}{NM}C(u)C(v)\,\sum_{x=0}^{7} \sum_{y=0}^{7}\,I(x,y)\,B(u,v,x,y)$
-
-        \vspace{3mm}
-        $f(x,y)=\frac{1}{NM}\,\sum_{x=0}^{7} \sum_{y=0}^{7}\,C(u)C(v)\,F(u,v)\,B(u,v,x,y)$
-
-        \vspace{3mm}
-        donde
-        \vspace{3mm}
-
-        $B(u,v,x,y) = cos\frac{(2x+1)u\pi}{16}cos\frac{(2y+1)v\pi}{16}$
-        \[
-        C(j) =
-             \begin{cases}
-                 \frac{1}{\sqrt{2}}\text{ si $j=0$}\\
-                 1 \text{ sino}\\
-             \end{cases}
-        \]
-        NOTE: Quizas meter aca un "si la comparamos con la DFT no es tan diferente, escribiendo
-        ambas"
-    \end{center}
-\end{frame}
-
 \subsection{Separar la imagen en cuadrados de 8 x 8}
 
 \begin{frame}
@@ -152,6 +122,34 @@
 \end{frame}
 
 \begin{frame}
+    \begin{center}
+        \textbf{¿Cómo era la DCT?} Sea $I$ una imagen de $NM$ pixels
+        \vspace{1cm}
+
+        $F(u,v)=\frac{1}{NM}C(u)C(v)\,\sum_{x=0}^{7} \sum_{y=0}^{7}\,I(x,y)\,B(u,v,x,y)$
+
+        \vspace{3mm}
+        $f(x,y)=\frac{1}{NM}\,\sum_{x=0}^{7} \sum_{y=0}^{7}\,C(u)C(v)\,F(u,v)\,B(u,v,x,y)$
+
+        \vspace{3mm}
+        donde
+        \vspace{3mm}
+
+        $B(u,v,x,y) = cos\frac{(2x+1)u\pi}{2N}cos\frac{(2y+1)v\pi}{2M}$
+        \[
+        C(j) =
+             \begin{cases}
+                 \frac{1}{\sqrt{2}}\text{ si $j=0$}\\
+                 1 \text{ sino}\\
+             \end{cases}
+        \]
+        %NOTE: Quizas meter aca un "si la comparamos con la DFT no es tan diferente, escribiendo
+        %ambas"
+    \end{center}
+\end{frame}
+
+
+\begin{frame}
     % la DCT son los coeficientes de la combinación lineal de esta base (en 8x8)
     % que forma la imagen original. es la misma idea que en Fourier
     \begin{center}
@@ -228,18 +226,6 @@
         \includegraphics[scale=0.4]{fig/lenas_100frecuencias.png}
     \end{center}
 \end{frame}
-
-
-\begin{frame}
-    % Aca pones algo acerca de DC vs AC.
-    % idea, dibu de la matriz, diciendo quien es AC, y quien DC, poniendo como queda
-    % la DCT para u=v=0, que es la media
-    \frametitle{Caracterizando un bloque}
-    Un bloque es también una matriz $B \in A^{8x8}$
-    \vspace{5mm}
-    $B_{0,0}$
-\end{frame}
-
 
 \subsection{Cuantizar los coeficientes}
 
