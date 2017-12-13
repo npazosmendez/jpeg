@@ -61,7 +61,7 @@ class jpeg:
         self.QTable = QTable
 
     def size(self):
-        return (len(self.Ybinstring) + len(self.Cbbinstring) + len(self.Crbinstring))/ 8 /1000
+        return (len(self.Ybinstring) + len(self.Cbbinstring) + len(self.Crbinstring))/ 8
 
 
 def jpeg_encode(img, Q = 100, NM = (8,8), QTable = np.array([\
